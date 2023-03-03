@@ -151,6 +151,7 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
 
     # Create job descriptions
     jobs = []
+    images_used = {}
     for desc in compilers:
         # Parse version
         [compiler, version_str, type] = desc
@@ -374,7 +375,11 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
 
         if cache_dir != None and image_supports_caching(image):
             environment['drone_cache_mount'] = cache_dir
-            environment['drone_cache_rebuild'] = 'true'
+            if image in images_used:
+                environment['drone_cache_rebuild'] = 'false'
+            else:
+                environment['drone_cache_rebuild'] = 'true'
+                images_used.add(image)
 
         # llvm
         llvm_os = None
