@@ -372,7 +372,7 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
             else:
                 image = 'cppalliance/dronevs2015'
 
-        if cache_dir != None:
+        if cache_dir != None and image_supports_caching(image):
             environment['drone_cache_mount'] = cache_dir
             environment['drone_cache_rebuild'] = 'true'
 
@@ -478,6 +478,14 @@ def compiler_supports(compiler, version, cxx):
             (cxx == '03' or cxx == '98')
     return False
 
+# Check if the image supports caching
+def image_supports_caching(image_str):
+    return image_str not in [
+        'cppalliance/droneubuntu2204:multiarch',
+        'cppalliance/dronevs2022',
+        'cppalliance/dronevs2019',
+        'cppalliance/dronevs2017',
+        'cppalliance/dronevs2015']
 
 # Get list of available compiler versions in a semver range
 # - compilers_in_range('gcc >=10') -> [('gcc', '12'), ('gcc', '11'), ('gcc', '10')]
