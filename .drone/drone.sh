@@ -188,7 +188,7 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
   fi
 
   if [ "$boost_cache_hit" != true ]; then
-    echo '==================================> CLONE BOOST'
+    echo '==================================> CLONE BOOST SUPER-PROJECT'
 
     pwd
     cd cache
@@ -196,7 +196,7 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     cd boost
     # git submodule update --init --recursive
 
-    echo '==================================> PATCH BOOST'
+    echo '==================================> PATCH BOOST SUPER-PROJECT'
 
     pwd
     cd libs
@@ -205,7 +205,7 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     git clone https://github.com/CppAlliance/http_io.git -b $BOOST_BRANCH http_io
     cd ..
 
-    echo '==================================> BOOST SUBMODULES'
+    echo '==================================> CLONE BOOST SUPER-PROJECT SUBMODULES'
 
     if command -v python &>/dev/null; then
       python_executable="python"
