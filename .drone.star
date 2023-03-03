@@ -25,7 +25,7 @@ def main(ctx):
          ],
         # Standards
         '>=14',
-        coverage=False, docs=False, asan=False, tsan=False, ubsan=False, cmake=False)
+        coverage=False, docs=False, asan=False, tsan=False, ubsan=False, cmake=False, cache_dir='cache')
 
 
 # from https://github.com/boostorg/boost-ci
@@ -44,8 +44,9 @@ load("@boost_ci//ci/drone/:functions.star", "linux_cxx", "windows_cxx", "osx_cxx
 # tsan: whether we should create an extra special tsan job
 # ubsan: whether we should create an extra special ubsan job
 # cmake: whether we should create an extra special cmake job
+# cache_dir: a subdirectory that will be cached (one per image)
 def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, asan=True, tsan=False, ubsan=True,
-             cmake=True):
+             cmake=True, cache_dir=None):
     # Get compiler versions we should test
     # Each compiler is a tuple (represented as a list) of:
     # - compiler name
@@ -370,6 +371,10 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
                 image = 'cppalliance/dronevs2017'
             else:
                 image = 'cppalliance/dronevs2015'
+
+        if cache_dir != None:
+            environment['drone_cache_mount'] = cache_dir
+            environment['drone_cache_rebuild'] = 'true'
 
         # llvm
         llvm_os = None
