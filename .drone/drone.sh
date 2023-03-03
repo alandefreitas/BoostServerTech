@@ -42,6 +42,7 @@ echo "==================================> CACHE HASHES"
 
 if [ -d "cache" ]; then
   mkdir "cache"
+  ls
 fi
 os_name=$(uname -s)
 ci_os_name=$TRAVIS_OS_NAME
@@ -59,7 +60,8 @@ done
 patches=https://github.com/CppAlliance/buffers.git,https://github.com/CppAlliance/http_proto.git,https://github.com/CppAlliance/http_io.git
 for patch in ${patches//,/ }; do
   patch_hash=$(git ls-remote $patch $BOOST_BRANCH | awk '{ print $1 }')
-  boost_cache_key=$boost_cache_key-$patch-$patch_hash
+  patch_filename=${patch##*/}
+  boost_cache_key=$boost_cache_key-$patch_filename-$patch_hash
 done
 echo "boost_cache_key=$boost_cache_key"
 
@@ -112,9 +114,9 @@ fi
 vcpkg_cache_key=$os_name-$vcpkg_hash$triplet_suffix
 vcpkg_packages=fmt,openssl,zlib
 for package in ${vcpkg_packages//,/ }; do
-  vcpkg_cache_key=$vcpkg_cache_hash-$package
+  vcpkg_cache_key=$vcpkg_cache_key-$package
 done
-echo "vcpkg_cache_key=$vcpkg_cache_hash"
+echo "vcpkg_cache_key=$vcpkg_cache_key"
 
 if [ -d "cache/vcpkg" ]; then
   if [ -f "cache/vcpkg_cache_key.txt" ]; then
@@ -135,36 +137,39 @@ else
   vcpkg_cache_hit=false
 fi
 
+echo '==================================> APT INSTALL'
+
+# Install vcpkg system dependencies
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+  # https://github.com/microsoft/vcpkg#installing-macos-developer-tools
+  xcode-select --install
+  export PATH=/opt/homebrew/bin:$PATH
+elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
+  # https://github.com/microsoft/vcpkg#installing-linux-developer-tools
+  sudo apt-get install -y build-essential tar curl zip unzip
+  apt install linux-libc-dev
+  if [ "$arch_name" == "arm64" ]; then
+    apt-get install -y ninja-build
+    export VCPKG_FORCE_SYSTEM_BINARIES=1
+  elif [ "$arch_name" == "aarch64" ]; then
+    apt-get install -y ninja-build
+    export VCPKG_FORCE_SYSTEM_BINARIES=1
+  elif [ "$arch_name" == "s390x" ]; then
+    apt-get install -y ninja-build
+    export VCPKG_FORCE_SYSTEM_BINARIES=1
+  fi
+elif [ "$TRAVIS_OS_NAME" == "freebsd" ]; then
+  pkg install curl zip unzip tar
+fi
+
 if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
 
   echo '==================================> VCPKG INSTALL'
 
-  # Install vcpkg system dependencies
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    # https://github.com/microsoft/vcpkg#installing-macos-developer-tools
-    xcode-select --install
-    export PATH=/opt/homebrew/bin:$PATH
-  elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    # https://github.com/microsoft/vcpkg#installing-linux-developer-tools
-    sudo apt-get install -y build-essential tar curl zip unzip
-    apt install linux-libc-dev
-    if [ "$arch_name" == "arm64" ]; then
-      apt-get install -y ninja-build
-      export VCPKG_FORCE_SYSTEM_BINARIES=1
-    elif [ "$arch_name" == "aarch64" ]; then
-      apt-get install -y ninja-build
-      export VCPKG_FORCE_SYSTEM_BINARIES=1
-    elif [ "$arch_name" == "s390x" ]; then
-      apt-get install -y ninja-build
-      export VCPKG_FORCE_SYSTEM_BINARIES=1
-    fi
-  elif [ "$TRAVIS_OS_NAME" == "freebsd" ]; then
-    pkg install curl zip unzip tar
-  fi
-
   # vcpkg install
   if [ "$vcpkg_cache_hit" != true ]; then
     pwd
+    ls
     cd cache
     git clone https://github.com/microsoft/vcpkg.git -b master vcpkg
     ./vcpkg/bootstrap-vcpkg.sh
@@ -174,6 +179,7 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     ./vcpkg install zlib$VCPKG_TRIPLET
     cd ..
     cd ..
+    echo $vcpkg_cache_key >"cache/vcpkg_cache_key.txt"
   fi
 
   if [ "$boost_cache_hit" != true ]; then
@@ -213,6 +219,7 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     $python_executable tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --include source url
     $python_executable tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --include source ../../../BoostServerTech
     cd ..
+    echo $boost_cache_key >"cache/boost_cache_key.txt"
   fi
 
   echo '==================================> CMAKE'
