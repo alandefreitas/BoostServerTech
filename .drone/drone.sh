@@ -25,9 +25,9 @@ export CC=${CC:-gcc}
 export PATH=~/.local/bin:/usr/local/bin:$PATH
 
 if [ "$TRAVIS_BRANCH" == "master" ]; then
-  export BOOST_BRANCH=master
+  BOOST_BRANCH=master
 else
-  export BOOST_BRANCH=develop
+  BOOST_BRANCH=develop
 fi
 
 echo "==================================> FINAL ENVIRONMENT"
