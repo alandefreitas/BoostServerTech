@@ -40,7 +40,7 @@ ls
 
 echo "==================================> CACHE HASHES"
 
-if [ -d "cache" ]; then
+if [ ! -d "cache" ]; then
   mkdir "cache"
   ls
 fi
