@@ -151,7 +151,7 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
 
     # Create job descriptions
     jobs = []
-    images_used = {}
+    images_used = []
     for desc in compilers:
         # Parse version
         [compiler, version_str, type] = desc
@@ -379,7 +379,7 @@ def generate(compiler_ranges, cxx_range, max_cxx=2, coverage=True, docs=True, as
                 environment['drone_cache_rebuild'] = 'false'
             else:
                 environment['drone_cache_rebuild'] = 'true'
-                images_used.add(image)
+                images_used += [image]
 
         # llvm
         llvm_os = None
