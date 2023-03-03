@@ -174,9 +174,9 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     git clone https://github.com/microsoft/vcpkg.git -b master vcpkg
     ./vcpkg/bootstrap-vcpkg.sh
     cd vcpkg
-    ./vcpkg install fmt$VCPKG_TRIPLET
-    ./vcpkg install openssl$VCPKG_TRIPLET
-    ./vcpkg install zlib$VCPKG_TRIPLET
+    ./vcpkg install fmt$triplet_suffix
+    ./vcpkg install openssl$triplet_suffix
+    ./vcpkg install zlib$triplet_suffix
     cd ..
     cd ..
     echo $vcpkg_cache_key >"cache/vcpkg_cache_key.txt"
