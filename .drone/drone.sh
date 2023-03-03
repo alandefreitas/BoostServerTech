@@ -40,10 +40,7 @@ ls
 
 echo "==================================> CACHE HASHES"
 
-if [ ! -d "cache" ]; then
-  mkdir "cache"
-  ls
-fi
+# Common vars in cache keys
 os_name=$(uname -s)
 ci_os_name=$TRAVIS_OS_NAME
 arch_name=$(uname -m)
@@ -64,25 +61,6 @@ for patch in ${patches//,/ }; do
   boost_cache_key=$boost_cache_key-$patch_filename-$patch_hash
 done
 echo "boost_cache_key=$boost_cache_key"
-
-if [ -d "cache/boost" ]; then
-  if [ -f "cache/boost_cache_key.txt" ]; then
-    boost_cached_key=$(cat cache/boost_cache_key.txt)
-    if [ "$boost_cache_key" == "$boost_cached_key" ]; then
-      boost_cache_hit=true
-    else
-      echo "boost_cached_key=$boost_cached_key (expected $boost_cache_key)"
-      rm -rf "cache/boost"
-      boost_cache_hit=false
-    fi
-  else
-    echo "Logic error: cache/boost stored without boost_cache_key.txt"
-    rm -rf "cache/boost"
-    boost_cache_hit=false
-  fi
-else
-  boost_cache_hit=false
-fi
 
 # Calculate vcpkg cache key
 vcpkg_hash="$(git ls-remote https://github.com/microsoft/vcpkg.git master | awk '{ print $1 }')"
@@ -118,23 +96,50 @@ for package in ${vcpkg_packages//,/ }; do
 done
 echo "vcpkg_cache_key=$vcpkg_cache_key"
 
-if [ -d "cache/vcpkg" ]; then
-  if [ -f "cache/vcpkg_cache_key.txt" ]; then
-    vcpkg_cached_key=$(cat cache/vcpkg_cache_key.txt)
-    if [ "$vcpkg_cache_key" == "$vcpkg_cached_key" ]; then
-      vcpkg_cache_hit=true
+if [ ! -d "cache" ]; then
+  mkdir "cache"
+  boost_cache_hit=false
+  vcpkg_cache_hit=false
+else
+  # validate boost cache
+  if [ -d "cache/boost" ]; then
+    if [ -f "cache/boost_cache_key.txt" ]; then
+      boost_cached_key=$(cat cache/boost_cache_key.txt)
+      if [ "$boost_cache_key" == "$boost_cached_key" ]; then
+        boost_cache_hit=true
+      else
+        echo "boost_cached_key=$boost_cached_key (expected $boost_cache_key)"
+        rm -rf "cache/boost"
+        boost_cache_hit=false
+      fi
     else
-      echo "vcpkg_cached_key=$vcpkg_cached_key (expected $vcpkg_cache_key)"
+      echo "Logic error: cache/boost stored without boost_cache_key.txt"
+      rm -rf "cache/boost"
+      boost_cache_hit=false
+    fi
+  else
+    boost_cache_hit=false
+  fi
+
+  # validate vcpkg cache
+  if [ -d "cache/vcpkg" ]; then
+    if [ -f "cache/vcpkg_cache_key.txt" ]; then
+      vcpkg_cached_key=$(cat cache/vcpkg_cache_key.txt)
+      if [ "$vcpkg_cache_key" == "$vcpkg_cached_key" ]; then
+        vcpkg_cache_hit=true
+      else
+        echo "vcpkg_cached_key=$vcpkg_cached_key (expected $vcpkg_cache_key)"
+        rm -rf "cache/vcpkg"
+        vcpkg_cache_hit=false
+      fi
+    else
+      echo "Logic error: cache/vcpkg stored without vcpkg_cache_key.txt"
       rm -rf "cache/vcpkg"
       vcpkg_cache_hit=false
     fi
   else
-    echo "Logic error: cache/vcpkg stored without vcpkg_cache_key.txt"
-    rm -rf "cache/vcpkg"
     vcpkg_cache_hit=false
   fi
-else
-  vcpkg_cache_hit=false
 fi
 
 echo '==================================> APT INSTALL'
