@@ -184,6 +184,9 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     ./vcpkg install zlib$triplet_suffix
     cd ..
     cd ..
+    if [ -f "cache/vcpkg_cache_key.txt" ]; then
+      truncate -s 0 "cache/vcpkg_cache_key.txt"
+    fi
     echo $vcpkg_cache_key >"cache/vcpkg_cache_key.txt"
   fi
 
@@ -224,6 +227,10 @@ if [ "$DRONE_JOB_BUILDTYPE" == "boost" ]; then
     $python_executable tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --include source url
     $python_executable tools/boostdep/depinst/depinst.py --include benchmark --include example --include examples --include tools --include source ../../../BoostServerTech
     cd ..
+
+    if [ -f "cache/boost_cache_key.txt" ]; then
+      truncate -s 0 "cache/boost_cache_key.txt"
+    fi
     echo $boost_cache_key >"cache/boost_cache_key.txt"
   fi
 
